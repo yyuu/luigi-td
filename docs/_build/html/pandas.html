@@ -1,0 +1,129 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Working with Pandas &mdash; luigi-td 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="luigi-td 0.1 documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li><a href="index.html">luigi-td 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="working-with-pandas">
+<h1>Working with Pandas<a class="headerlink" href="#working-with-pandas" title="Permalink to this headline">¶</a></h1>
+<p>For those of guys who are funs of <a class="reference external" href="http://pandas.pydata.org/">Pandas</a>, there are two ways of converting query results to DataFrames.  A straigtforward way is to get a CSV file using <tt class="docutils literal"><span class="pre">QueryToFile</span></tt> and then read from the file:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+
+<span class="k">class</span> <span class="nc">MyQueryToFile</span><span class="p">(</span><span class="n">luigi_td</span><span class="o">.</span><span class="n">QueryToFile</span><span class="p">):</span>
+    <span class="nb">type</span> <span class="o">=</span> <span class="s">&#39;presto&#39;</span>
+    <span class="n">database</span> <span class="o">=</span> <span class="s">&#39;sample_datasets&#39;</span>
+    <span class="n">output_file</span> <span class="o">=</span> <span class="s">&#39;result.csv&#39;</span>
+
+    <span class="k">def</span> <span class="nf">query_body</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;SELECT count(1) cnt FROM www_access&quot;</span>
+
+<span class="k">class</span> <span class="nc">MyQueryResultProcessing</span><span class="p">(</span><span class="n">luigi</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">requires</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">MyQueryToFile</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="p">()</span>
+        <span class="c"># convert the result to a DataFrame</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+        <span class="o">...</span>
+</pre></div>
+</div>
+<p>As a shortcut, you can use <tt class="docutils literal"><span class="pre">luigi_td.pandas.QueryForDataFrame</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">luigi_td.pandas</span>
+
+<span class="k">class</span> <span class="nc">MyQueryForDataFrame</span><span class="p">(</span><span class="n">luigi_td</span><span class="o">.</span><span class="n">pandas</span><span class="o">.</span><span class="n">QueryForDataFrame</span><span class="p">):</span>
+    <span class="nb">type</span> <span class="o">=</span> <span class="s">&#39;presto&#39;</span>
+    <span class="n">database</span> <span class="o">=</span> <span class="s">&#39;sample_datasets&#39;</span>
+    <span class="n">output_file</span> <span class="o">=</span> <span class="s">&#39;result.csv&#39;</span>
+
+    <span class="k">def</span> <span class="nf">query_body</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;SELECT count(1) cnt FROM www_access&quot;</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># self.input() is a DaraFrame for this class</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="p">()</span>
+        <span class="o">...</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/pandas.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li><a href="index.html">luigi-td 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Keisuke Nishida.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>

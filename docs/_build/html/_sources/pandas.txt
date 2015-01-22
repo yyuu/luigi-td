@@ -1,0 +1,42 @@
+Working with Pandas
+-------------------
+
+For those of guys who are funs of `Pandas <http://pandas.pydata.org/>`_, there are two ways of converting query results to DataFrames.  A straigtforward way is to get a CSV file using ``QueryToFile`` and then read from the file::
+
+  import pandas as pd
+
+  class MyQueryToFile(luigi_td.QueryToFile):
+      type = 'presto'
+      database = 'sample_datasets'
+      output_file = 'result.csv'
+
+      def query_body(self):
+          return "SELECT count(1) cnt FROM www_access"
+
+  class MyQueryResultProcessing(luigi.Task):
+      def requires(self):
+          return MyQueryToFile()
+
+      def run(self):
+          result = self.input()
+          # convert the result to a DataFrame
+          df = pd.read_csv(result.path)
+          ...
+
+As a shortcut, you can use ``luigi_td.pandas.QueryForDataFrame``::
+
+  import luigi_td.pandas
+
+  class MyQueryForDataFrame(luigi_td.pandas.QueryForDataFrame):
+      type = 'presto'
+      database = 'sample_datasets'
+      output_file = 'result.csv'
+
+      def query_body(self):
+          return "SELECT count(1) cnt FROM www_access"
+
+      def run(self):
+          # self.input() is a DaraFrame for this class
+          df = self.input()
+          ...
+

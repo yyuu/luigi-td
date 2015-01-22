@@ -1,0 +1,380 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Getting Started &mdash; luigi-td 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="luigi-td 0.1 documentation" href="index.html" />
+    <link rel="prev" title="luigi-td documentation" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="index.html" title="luigi-td documentation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">luigi-td 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="getting-started">
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>Assuming you have already installed Python, you can install Luigi-td by <tt class="docutils literal"><span class="pre">pip</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ pip install luigi-td
+</pre></div>
+</div>
+</div>
+<div class="section" id="configuration">
+<h2>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline">¶</a></h2>
+<p>Set <tt class="docutils literal"><span class="pre">TD_API_KEY</span></tt> to your API key:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ export TD_API_KEY=&quot;1/1c410625...&quot;
+</pre></div>
+</div>
+<p>If you have a configuration file for Luigi (<tt class="docutils literal"><span class="pre">/etc/luigi/client.cfg</span></tt> by default), you can add a <tt class="docutils literal"><span class="pre">[td]</span></tt> section in it:</p>
+<div class="highlight-python"><div class="highlight"><pre># configuration for Luigi
+[core]
+error-email: you@example.com
+
+# configuration for Luigi-td
+[td]
+api-key: 1/1c410625...
+</pre></div>
+</div>
+</div>
+<div class="section" id="writing-queries">
+<h2>Writing Queries<a class="headerlink" href="#writing-queries" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">The script in this tutorial is available online at <a class="reference external" href="http://github.com/k24d/luigi-td/example/tutorial/tutorial.py">http://github.com/k24d/luigi-td/example/tutorial/tutorial.py</a></p>
+</div>
+<p>All queries are defined as subclasses of <tt class="docutils literal"><span class="pre">luigi_td.Query</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># tutorial.py</span>
+
+<span class="kn">import</span> <span class="nn">luigi</span>
+<span class="kn">import</span> <span class="nn">luigi_td</span>
+
+<span class="k">class</span> <span class="nc">MyQuery</span><span class="p">(</span><span class="n">luigi_td</span><span class="o">.</span><span class="n">Query</span><span class="p">):</span>
+    <span class="nb">type</span> <span class="o">=</span> <span class="s">&#39;presto&#39;</span>
+    <span class="n">database</span> <span class="o">=</span> <span class="s">&#39;sample_datasets&#39;</span>
+
+    <span class="k">def</span> <span class="nf">query_body</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;SELECT count(1) cnt FROM www_access&quot;</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">luigi</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>You can submit your query as a normal Python script as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ python tutorial.py MyQuery --local-scheduler
+DEBUG: Checking if MyQuery() is complete
+INFO: Scheduled MyQuery() (PENDING)
+INFO: Done scheduling tasks
+INFO: Running Worker with 1 processes
+DEBUG: Asking scheduler for work...
+DEBUG: Pending tasks: 1
+INFO: [pid 1234] Worker Worker(salt=123456789, host=...) running   MyQuery()
+INFO: MyQuery(): td.job_url: https://console.treasuredata.com/jobs/19958264
+INFO: MyQuery(): td.job_result: id=19958264 status=success elapsed=12.34
+INFO: [pid 1234] Worker Worker(salt=123456789, host=...) done      MyQuery()
+</pre></div>
+</div>
+<p>Notice that there are INFO messages &#8220;td.job_url&#8221; and &#8220;td.job_result&#8221; in the log.  The result of your query is accessible either by opening the URL or by running <tt class="docutils literal"><span class="pre">td</span> <span class="pre">job:show</span></tt> as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ td job:show 19958264
+JobID       : 19958264
+Status      : success
+...
+Result      :
++------+
+| cnt  |
++------+
+| 5000 |
++------+
+1 row in set
+</pre></div>
+</div>
+</div>
+<div class="section" id="getting-the-result">
+<h2>Getting the Result<a class="headerlink" href="#getting-the-result" title="Permalink to this headline">¶</a></h2>
+<p>You will often retrieve query results within Python for further processing.  Fortunately, you can directly access to the result object by calling <tt class="docutils literal"><span class="pre">self.input()</span></tt> from another Luigi task:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyQuery</span><span class="p">(</span><span class="n">luigi_td</span><span class="o">.</span><span class="n">Query</span><span class="p">):</span>
+    <span class="nb">type</span> <span class="o">=</span> <span class="s">&#39;presto&#39;</span>
+    <span class="n">database</span> <span class="o">=</span> <span class="s">&#39;sample_datasets&#39;</span>
+
+    <span class="k">def</span> <span class="nf">query_body</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;SELECT count(1) cnt FROM www_access&quot;</span>
+
+<span class="k">class</span> <span class="nc">MyQueryResult</span><span class="p">(</span><span class="n">luigi</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">requires</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">MyQuery</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="p">()</span>
+        <span class="k">print</span> <span class="s">&#39;====================&#39;</span>
+        <span class="k">print</span> <span class="s">&quot;Job ID     : &quot;</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">job_id</span>
+        <span class="k">print</span> <span class="s">&quot;Status     : &quot;</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">status</span>
+        <span class="k">print</span> <span class="s">&quot;Result     :&quot;</span>
+        <span class="k">print</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">columns</span><span class="p">])</span>
+        <span class="k">print</span> <span class="s">&quot;----&quot;</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">cursor</span><span class="p">():</span>
+            <span class="k">print</span> <span class="s">&quot;</span><span class="se">\t</span><span class="s">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">row</span><span class="p">])</span>
+        <span class="k">print</span> <span class="s">&#39;====================&#39;</span>
+</pre></div>
+</div>
+<p>As you can see in this example, our second task <tt class="docutils literal"><span class="pre">MyQueryResult</span></tt> requires <tt class="docutils literal"><span class="pre">MyQuery</span></tt>, which is automatically executed by Luigi&#8217;s scheduler.  Thus, two tasks will be performed sequencially just by running <tt class="docutils literal"><span class="pre">MyQueryResult</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ python tutorial.py MyQueryResult --local-scheduler
+...
+INFO: [pid 1234] Worker Worker(salt=123456789, host=...) running   MyQuery()
+INFO: MyQuery(): td.job_url: https://console.treasuredata.com/jobs/19958264
+INFO: MyQuery(): td.job_result: id=19958264 status=success elapsed=12.34
+INFO: [pid 1234] Worker Worker(salt=123456789, host=...) done      MyQuery()
+...
+INFO: [pid 1234] Worker Worker(salt=123456789, host=...) running   MyQueryResult()
+====================
+Job ID     :  19958264
+Status     :  success
+Result     :
+cnt
+----
+5000
+====================
+INFO: [pid 1234] Worker Worker(salt=123456789, host=...) done      MyQueryResult()
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">MyQueryResult</span></tt> is executed when the query defined in <tt class="docutils literal"><span class="pre">MyQuery</span></tt> is completed.  You can start downloading the result of your query as soon as <tt class="docutils literal"><span class="pre">MyQueryResult.run()</span></tt> is called.  Note that <tt class="docutils literal"><span class="pre">MyQueryResult</span></tt> won&#8217;t be executed if <tt class="docutils literal"><span class="pre">MyQuery</span></tt> got interrupted, either by a user error (like a syntax error) or by a run-time error (like network failure).  See (TODO) for details.</p>
+</div>
+<div class="section" id="processing-the-result">
+<h2>Processing the Result<a class="headerlink" href="#processing-the-result" title="Permalink to this headline">¶</a></h2>
+<p>At the time our second query <tt class="docutils literal"><span class="pre">MyQueryResult</span></tt> is called, the query result has not been downloaded yet.  Unless it is adequately small, you should save the result into a local file before processing so you can avoid downloading it twice on processing errors.  That&#8217;s why we need another step in our data workflow.</p>
+<p>Suppose you had a bug in your data processing code.  If you didn&#8217;t save the result, you would run the same query again and again until you fixed the bug.  Instead, you can use the <tt class="docutils literal"><span class="pre">dump()</span></tt> method, combined with <tt class="docutils literal"><span class="pre">luigi.LocalTarget</span></tt>, to save query results to local files and let Luigi to skip running the same query:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyQueryResultDump</span><span class="p">(</span><span class="n">luigi</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">requires</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">MyQuery</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># this task creates &quot;result.tsv&quot;</span>
+        <span class="k">return</span> <span class="n">luigi</span><span class="o">.</span><span class="n">LocalTarget</span><span class="p">(</span><span class="s">&#39;result.tsv&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="p">()</span>
+        <span class="c"># dump to &quot;result.tsv&quot;</span>
+        <span class="n">result</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s">&#39;result.tsv&#39;</span><span class="p">)</span>
+
+<span class="k">class</span> <span class="nc">MyQueryResultProcess</span><span class="p">(</span><span class="n">luigi</span><span class="o">.</span><span class="n">Task</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">requires</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">MyQueryResultDump</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="p">()</span>
+        <span class="c"># open the result now</span>
+        <span class="k">with</span> <span class="n">result</span><span class="o">.</span><span class="n">open</span><span class="p">()</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">print</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="outputting-the-result">
+<h2>Outputting the Result<a class="headerlink" href="#outputting-the-result" title="Permalink to this headline">¶</a></h2>
+<p>You might want to send query results to cloud services without saving them to your local machine.  Luigi-td supports various output classes that transfer the results to remote servers, either directly from Treasure Data or indirectly through an intermediate server.</p>
+<p>The primitive way of using result outputs is to set <tt class="docutils literal"><span class="pre">result_url</span></tt> in your query class:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyOutputQuery</span><span class="p">(</span><span class="n">luigi_td</span><span class="o">.</span><span class="n">Query</span><span class="p">):</span>
+    <span class="nb">type</span> <span class="o">=</span> <span class="s">&#39;presto&#39;</span>
+    <span class="n">database</span> <span class="o">=</span> <span class="s">&#39;sample_datasets&#39;</span>
+
+    <span class="c"># the output goes to S3</span>
+    <span class="n">result_url</span> <span class="o">=</span> <span class="s">&#39;s3://XXX/my_output_bucket&#39;</span>
+
+    <span class="c"># alternatively, you can define a property</span>
+    <span class="c"># @property</span>
+    <span class="c"># def result_url(self):</span>
+    <span class="c">#     return &#39;s3://XXX/my_output_bucket&#39;</span>
+
+    <span class="k">def</span> <span class="nf">query_body</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;SELECT count(1) cnt FROM www_access&quot;</span>
+</pre></div>
+</div>
+<p>See <a class="reference external" href="http://docs.treasuredata.com/categories/result">Job Result Output</a> for the list of available result output targets.</p>
+<p>Luigi-td provides several pre-defined output classes for convenience.  For example, you can mixin <tt class="docutils literal"><span class="pre">luigi_td.S3ResultOutput</span></tt> to your query and get the result output to Amazon S3:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyQueryResultOutput</span><span class="p">(</span><span class="n">luigi_td</span><span class="o">.</span><span class="n">Query</span><span class="p">,</span> <span class="n">luigi_td</span><span class="o">.</span><span class="n">S3ResultOutput</span><span class="p">):</span>
+    <span class="nb">type</span> <span class="o">=</span> <span class="s">&#39;presto&#39;</span>
+    <span class="n">database</span> <span class="o">=</span> <span class="s">&#39;sample_datasets&#39;</span>
+
+    <span class="n">aws_access_key_id</span> <span class="o">=</span> <span class="s">&#39;...&#39;</span>
+    <span class="n">aws_secret_access_key</span> <span class="o">=</span> <span class="s">&#39;...&#39;</span>
+    <span class="n">s3_path</span> <span class="o">=</span> <span class="s">&#39;my_output_bucket/luigi-td/file.csv&#39;</span>
+
+    <span class="k">def</span> <span class="nf">query_body</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;SELECT count(1) cnt FROM www_access&quot;</span>
+</pre></div>
+</div>
+<p>See &#8220;Result Output&#8221; for the list of available classes.</p>
+</div>
+<div class="section" id="templating-queries">
+<h2>Templating Queries<a class="headerlink" href="#templating-queries" title="Permalink to this headline">¶</a></h2>
+<p>Luigi-td uses <a class="reference external" href="http://jinja.pocoo.org/">Jinja2</a> as the default template engine.  Query strings are rendered as Jinja2 templates at run time:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyTemplateQuery</span><span class="p">(</span><span class="n">luigi_td</span><span class="o">.</span><span class="n">Query</span><span class="p">):</span>
+    <span class="nb">type</span> <span class="o">=</span> <span class="s">&#39;presto&#39;</span>
+    <span class="n">database</span> <span class="o">=</span> <span class="s">&#39;sample_datasets&#39;</span>
+
+    <span class="c"># variables used in the template</span>
+    <span class="n">target_table</span> <span class="o">=</span> <span class="s">&#39;www_access&#39;</span>
+
+    <span class="k">def</span> <span class="nf">query_body</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># query string is rendered as a Jinja2 template</span>
+        <span class="k">return</span> <span class="s">&quot;SELECT count(1) cnt FROM {{ task.target_table }}&quot;</span>
+</pre></div>
+</div>
+<p>As you can see in this example, a single variable <tt class="docutils literal"><span class="pre">task</span></tt> is available in templates.  The value of <tt class="docutils literal"><span class="pre">task</span></tt> is the instance of your query class.  As a result, the template <tt class="docutils literal"><span class="pre">{{</span> <span class="pre">task.target_table</span> <span class="pre">}}</span></tt> will be replaced by <tt class="docutils literal"><span class="pre">www_access</span></tt> at run time.  You can set any variables or methods in your class and access to them through <tt class="docutils literal"><span class="pre">task</span></tt>.</p>
+<p>If you prefer defining variables explicitly, set a dictionaly <tt class="docutils literal"><span class="pre">variables</span></tt>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyTemplateQueryWithVariables</span><span class="p">(</span><span class="n">luigi_td</span><span class="o">.</span><span class="n">Query</span><span class="p">):</span>
+    <span class="nb">type</span> <span class="o">=</span> <span class="s">&#39;presto&#39;</span>
+    <span class="n">database</span> <span class="o">=</span> <span class="s">&#39;sample_datasets&#39;</span>
+    <span class="n">variables</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;target_table&#39;</span><span class="p">:</span> <span class="s">&#39;www_access&#39;</span>
+    <span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">query_body</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;SELECT count(1) cnt FROM {{ target_table }}&quot;</span>
+</pre></div>
+</div>
+<p>You might want to store your queries in separate files instead of writing them within the script.  Just set your query file name to <tt class="docutils literal"><span class="pre">query</span></tt>.  This is the most common case how you will define your queries:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyTemplateFileQuery</span><span class="p">(</span><span class="n">luigi_td</span><span class="o">.</span><span class="n">Query</span><span class="p">):</span>
+    <span class="nb">type</span> <span class="o">=</span> <span class="s">&#39;presto&#39;</span>
+    <span class="n">database</span> <span class="o">=</span> <span class="s">&#39;sample_datasets&#39;</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="s">&#39;templates/query.sql&#39;</span>
+    <span class="n">variables</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s">&#39;target_table&#39;</span><span class="p">:</span> <span class="s">&#39;www_access&#39;</span>
+    <span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre>-- templates/query.sql
+SELECT count(1) cnt FROM {{ target_table }}
+</pre></div>
+</div>
+</div>
+<div class="section" id="passing-parameters">
+<h2>Passing Parameters<a class="headerlink" href="#passing-parameters" title="Permalink to this headline">¶</a></h2>
+<p>Luigi supports passing parameters as command line options or constructor arguments.  Parameters can be used to build queries dynamically:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="k">class</span> <span class="nc">MyQueryWithParameters</span><span class="p">(</span><span class="n">luigi_td</span><span class="o">.</span><span class="n">Query</span><span class="p">):</span>
+    <span class="nb">type</span> <span class="o">=</span> <span class="s">&#39;presto&#39;</span>
+    <span class="n">database</span> <span class="o">=</span> <span class="s">&#39;sample_datasets&#39;</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="s">&#39;templates/query_with_time_range.sql&#39;</span>
+
+    <span class="c"># parameters</span>
+    <span class="n">target_date</span> <span class="o">=</span> <span class="n">luigi</span><span class="o">.</span><span class="n">DateParameter</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="highlight-python"><div class="highlight"><pre>-- templates/query_with_time_range.sql
+SELECT count(1) cnt
+FROM www_access
+WHERE td_time_range(time, td_time_add(&#39;{{ task.target_date }}&#39;, &#39;-1d&#39;), &#39;{{ task.target_date }}&#39;)
+</pre></div>
+</div>
+<p>You can pass parameters as command line options:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ python tutorial.py MyQueryWithParameters --local-scheduler --target-date 2015-01-01
+INFO: Scheduled MyQueryWithParameters(target_date=2015-01-01) (PENDING)
+...
+</pre></div>
+</div>
+<p>The query template is rendered using parameters, and you will get the following query as a result:</p>
+<div class="highlight-python"><div class="highlight"><pre>-- templates/query_with_time_range.sql
+SELECT count(1) cnt
+FROM www_access
+WHERE td_time_range(time, td_time_add(&#39;2015-01-01&#39;, &#39;-1d&#39;), &#39;2015-01-01&#39;)
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Getting Started</a><ul>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#configuration">Configuration</a></li>
+<li><a class="reference internal" href="#writing-queries">Writing Queries</a></li>
+<li><a class="reference internal" href="#getting-the-result">Getting the Result</a></li>
+<li><a class="reference internal" href="#processing-the-result">Processing the Result</a></li>
+<li><a class="reference internal" href="#outputting-the-result">Outputting the Result</a></li>
+<li><a class="reference internal" href="#templating-queries">Templating Queries</a></li>
+<li><a class="reference internal" href="#passing-parameters">Passing Parameters</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">luigi-td documentation</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/gettingstarted.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="index.html" title="luigi-td documentation"
+             >previous</a> |</li>
+        <li><a href="index.html">luigi-td 0.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2015, Keisuke Nishida.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.2.3.
+    </div>
+  </body>
+</html>
